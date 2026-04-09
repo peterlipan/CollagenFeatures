@@ -61,12 +61,43 @@ def compute_collagen_metrics(
         result["orientationj_coherency"] = np.nan
 
     if run_twombli:
-        result.update(backend.compute_twombli_metrics(str(image_path)))
+        twombli_result = backend.compute_twombli_metrics(
+            image=working_image,
+            image_name=image_path.stem,
+            output_dir=output_dir,
+            config=cfg,
+        )
+        if twombli_result is None:
+            result["twombli_backend"] = "python_surrogate"
+            surrogate_metrics = compute_python_metrics(mask, pixel_size_um=pixel_size_um)
+            for key in (
+                "mask_area_fraction",
+                "fibre_length_um",
+                "lacunarity",
+                "endpoints",
+                "branch_points",
+                "hyphal_growth_unit_um",
+                "curvature_30um_deg",
+                "curvature_40um_deg",
+                "fractal_dimension_boxcount",
+            ):
+                result[key] = surrogate_metrics.get(key)
+        else:
+            result.update(twombli_result)
     else:
         result["twombli_backend"] = "disabled"
 
-    if compute_custom or run_twombli:
-        result.update(compute_python_metrics(mask, pixel_size_um=pixel_size_um))
+    if run_twombli and "mask_area_um2" in result and "mask_area_fraction" not in result:
+        total_area = raw_image.shape[0] * raw_image.shape[1] * pixel_size_um * pixel_size_um
+        result["mask_area_fraction"] = float(result["mask_area_um2"] / total_area) if total_area > 0 else np.nan
+
+    if compute_custom:
+        python_metrics = compute_python_metrics(mask, pixel_size_um=pixel_size_um)
+        if run_twombli:
+            for key in ("fibre_width_um", "length_tortuosity", "skeleton_pixels", "connected_components"):
+                result[key] = python_metrics.get(key)
+        else:
+            result.update(python_metrics)
 
     if output_dir is not None:
         Path(output_dir).mkdir(parents=True, exist_ok=True)

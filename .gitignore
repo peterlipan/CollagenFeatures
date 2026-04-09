@@ -196,3 +196,6 @@ cython_debug/
 # Project outputs
 results/
 tmp_test_images/
+tmp_twombli_test/
+third_party/twombli/*.jar
+third_party/twombli/*.jar-*
