@@ -54,7 +54,6 @@ df = batch_compute_collagen_metrics(image_paths, "results/metrics.csv")
 - [`utils/`](./utils): small shared helpers such as image-name normalization
 - [`pipelines/`](./pipelines): high-level single-image, batch, and red-channel workflows
 - [`main.py`](./main.py): main batch entry point for the red-channel dataset workflow
-- [`compare_official_results.py`](./compare_official_results.py): comparison utility for generated versus official results
 
 ## Notes
 
